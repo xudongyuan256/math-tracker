@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>数学成绩追踪</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f5f7fa;color:#1a1a2e;line-height:1.6;-webkit-font-smoothing:antialiased}
+.app{max-width:100%;margin:0 auto;min-height:100vh}
+.header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;padding:18px 16px;text-align:center;position:sticky;top:0;z-index:100}
+.header h1{font-size:20px;font-weight:700}
+.header p{font-size:12px;opacity:.85;margin-top:2px}
+.info-bar{background:#fff;padding:12px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #e8e8e8}
+.info-bar input{border:none;border-bottom:1.5px solid #ddd;padding:4px 2px;font-size:14px;width:85px;background:transparent}
+.info-bar input:focus{outline:none;border-bottom-color:#667eea}
+.info-bar label{font-size:12px;color:#888;margin-right:2px}
+.nav{display:flex;background:#fff;border-bottom:1px solid #e8e8e8;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nav::-webkit-scrollbar{display:none}
+.nav-btn{flex:1;min-width:64px;padding:12px 6px;text-align:center;font-size:12px;font-weight:600;color:#888;border:none;background:none;cursor:pointer;white-space:nowrap;position:relative}
+.nav-btn.active{color:#667eea}
+.nav-btn.active::after{content:"";position:absolute;bottom:0;left:15%;right:15%;height:3px;background:#667eea;border-radius:3px 3px 0 0}
+.content{padding:12px;padding-bottom:40px}
+.page{display:none}
+.page.active{display:block;animation:fadeIn .25s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.card{background:#fff;border-radius:12px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.06)}
+.card-title{font-size:15px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:14px}
+.stat{background:#fff;border-radius:12px;padding:14px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;top:0;left:0;right:0;height:3px}
+.stat.blue::before{background:#667eea}
+.stat.green::before{background:#10b981}
+.stat.orange::before{background:#f59e0b}
+.stat.red::before{background:#ef4444}
+.stat-label{font-size:11px;color:#888;margin-bottom:4px}
+.stat-value{font-size:26px;font-weight:800}
+.stat-sub{font-size:11px;color:#888;margin-top:2px}
+.chart-box{width:100%;height:200px;position:relative}
+.chart-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:#888;font-size:13px}
+.chart-empty .emoji{font-size:36px;margin-bottom:6px;opacity:.4}
+.form-group{margin-bottom:12px}
+.form-label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+.form-label .req{color:#ef4444}
+.form-input,.form-select,.form-textarea{width:100%;padding:10px 12px;border:1.5px solid #e8e8e8;border-radius:10px;font-size:14px;background:#fff;-webkit-appearance:none}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:#667eea}
+.form-textarea{resize:vertical;min-height:70px}
+.form-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.btn{display:block;width:100%;padding:12px;border-radius:10px;border:none;font-size:15px;font-weight:600;cursor:pointer;text-align:center;margin-bottom:10px}
+.btn-primary{background:#667eea;color:#fff}
+.btn-secondary{background:#f5f7fa;color:#333;border:1.5px solid #e8e8e8}
+.btn-danger{background:#ef4444;color:#fff;padding:5px 10px;font-size:11px;border-radius:6px;border:none;display:inline-block;width:auto}
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.data-table{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.data-table th{background:#f8f9fa;color:#888;font-weight:600;padding:10px 8px;text-align:left;border-bottom:2px solid #e8e8e8;white-space:nowrap;font-size:11px}
+.data-table td{padding:10px 8px;border-bottom:1px solid #f0f0f0;vertical-align:middle}
+.tag{display:inline-block;padding:3px 8px;border-radius:999px;font-size:10px;font-weight:600}
+.tag-p{background:#ede9fe;color:#7c3aed}
+.tag-y{background:#fef3c7;color:#b45309}
+.tag-r{background:#fee2e2;color:#b91c1c}
+.tag-b{background:#dbeafe;color:#1d4ed8}
+.tag-g{background:#d1fae5;color:#047857}
+.tag-gr{background:#f1f5f9;color:#64748b}
+.score-bar{width:36px;height:5px;background:#e8e8e8;border-radius:3px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:4px}
+.score-bar-fill{height:100%;border-radius:3px}
+.type-item{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#f8f9fa;border-radius:10px;margin-bottom:8px}
+.type-name{font-size:12px;font-weight:600;min-width:60px}
+.type-bar{flex:1;height:6px;background:#e8e8e8;border-radius:3px;overflow:hidden}
+.type-bar-fill{height:100%;border-radius:3px}
+.type-count{font-size:15px;font-weight:700;min-width:22px;text-align:right}
+.type-pct{font-size:11px;color:#888;min-width:36px;text-align:right}
+.ref-item{background:#f8f9fa;border:1.5px dashed #ddd;border-radius:10px;padding:12px;margin-bottom:10px}
+.ref-num{width:22px;height:22px;border-radius:50%;background:#667eea;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;margin-right:6px}
+.ref-q{font-weight:600;font-size:13px;margin-bottom:3px}
+.ref-hint{color:#888;font-size:11px;padding-left:28px}
+.sugg-item{background:#f8f9fa;border-radius:10px;padding:12px;margin-bottom:8px}
+.sugg-icon{font-size:18px;margin-bottom:4px}
+.sugg-title{font-weight:700;font-size:13px;margin-bottom:2px}
+.sugg-text{font-size:12px;color:#666;line-height:1.5}
+.empty{text-align:center;padding:40px 16px;color:#888}
+.empty .big{font-size:44px;margin-bottom:10px;opacity:.4}
+.empty h3{font-size:14px;color:#333;margin-bottom:4px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:1000;opacity:0;transition:all .3s;max-width:90%;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.footer{text-align:center;padding:16px;font-size:11px;color:#aaa}
+</style>
+<base target="_blank">
+</head>
+<body>
+
+<div class="app">
+  <div class="header">
+    <h1>📊 数学成绩追踪</h1>
+    <p>记录考试 · 追踪成长</p>
+  </div>
+
+  <div class="info-bar">
+    <div><label>姓名</label><input type="text" id="sName" placeholder="输入姓名"></div>
+    <div><label>班级</label><input type="text" id="sClass" placeholder="如初三2班"></div>
+    <div><label>目标</label><input type="number" id="sTarget" placeholder="目标分"></div>
+  </div>
+
+  <div class="nav">
+    <button class="nav-btn active" onclick="go('dash',this)">📈总览</button>
+    <button class="nav-btn" onclick="go('add',this)">➕录入</button>
+    <button class="nav-btn" onclick="go('list',this)">📋记录</button>
+    <button class="nav-btn" onclick="go('ana',this)">🔍分析</button>
+    <button class="nav-btn" onclick="go('ref',this)">💡反思</button>
+  </div>
+
+  <div class="content">
+
+    <div class="page active" id="p-dash">
+      <div class="stats">
+        <div class="stat blue"><div class="stat-label">考试次数</div><div class="stat-value" id="d1">0</div><div class="stat-sub">次</div></div>
+        <div class="stat green"><div class="stat-label">平均分</div><div class="stat-value" id="d2">--</div><div class="stat-sub">分</div></div>
+        <div class="stat orange"><div class="stat-label">最高分</div><div class="stat-value" id="d3">--</div><div class="stat-sub">分</div></div>
+        <div class="stat red"><div class="stat-label">进步</div><div class="stat-value" id="d4">--</div><div class="stat-sub" id="d4s">分</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📈 成绩趋势</div>
+        <div class="chart-box" id="chart1"><div class="chart-empty"><div class="emoji">📊</div><div>暂无数据，请先录入成绩</div></div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">📝 最近考试</div>
+        <div id="recent"></div>
+      </div>
+    </div>
+
+    <div class="page" id="p-add">
+      <div class="card">
+        <div class="card-title">➕ 录入新成绩</div>
+        <div class="form-group"><label class="form-label">考试日期 <span class="req">*</span></label><input type="date" class="form-input" id="aDate"></div>
+        <div class="form-group"><label class="form-label">考试名称 <span class="req">*</span></label><input type="text" class="form-input" id="aName" placeholder="如：月考一"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group"><label class="form-label">满分 <span class="req">*</span></label><input type="number" class="form-input" id="aFull" value="100"></div>
+          <div class="form-group"><label class="form-label">得分 <span class="req">*</span></label><input type="number" class="form-input" id="aScore" placeholder="0"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div class="form-group"><label class="form-label">错题类型</label><select class="form-select" id="aType"><option value="">请选择</option><option>知识盲区</option><option>计算失误</option><option>粗心大意</option><option>概念混淆</option><option>时间不足</option><option>审题不清</option></select></div>
+          <div class="form-group"><label class="form-label">错误原因</label><select class="form-select" id="aReason"><option value="">请选择</option><option>基础不牢</option><option>方法不熟</option><option>练习不足</option><option>心态紧张</option><option>步骤跳步</option><option>公式记错</option></select></div>
+        </div>
+        <div class="form-group"><label class="form-label">涉及知识点</label><input type="text" class="form-input" id="aPoint" placeholder="如：二次函数、几何证明"></div>
+        <div class="form-group"><label class="form-label">自我反思</label><textarea class="form-textarea" id="aRef" placeholder="这次考试最大的失分点在哪里？"></textarea></div>
+        <button class="btn btn-primary" onclick="save()">✅ 保存记录</button>
+        <button class="btn btn-secondary" onclick="reset()">🔄 重置</button>
+      </div>
+    </div>
+
+    <div class="page" id="p-list">
+      <div class="card">
+        <div class="card-title">📋 全部记录</div>
+        <div class="table-wrap">
+          <table class="data-table"><thead><tr><th>日期</th><th>考试</th><th>得分</th><th>得分率</th><th>类型</th><th>原因</th><th>知识点</th><th>反思</th><th>操作</th></tr></thead><tbody id="tb1"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <div class="page" id="p-ana">
+      <div class="card"><div class="card-title">🎯 错题类型分布</div><div id="types"></div></div>
+      <div class="card"><div class="card-title">📊 得分率分布</div><div id="scoreDist"></div></div>
+      <div class="card"><div class="card-title">💡 改进建议</div><div id="suggs"></div></div>
+    </div>
+
+    <div class="page" id="p-ref">
+      <div class="card">
+        <div class="card-title">📝 考后反思模板</div>
+        <p style="color:#888;font-size:12px;margin-bottom:12px">每次考后认真回答以下问题：</p>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">1</span>本次考试整体感受</div><div class="ref-hint">难度？心态？时间够吗？</div></div>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">2</span>失分最多的知识点</div><div class="ref-hint">具体列出，如二次函数应用题</div></div>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">3</span>错误原因分析</div><div class="ref-hint">知识漏洞/方法不熟/粗心/时间/心态</div></div>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">4</span>与上次对比</div><div class="ref-hint">进步/退步多少？变化在哪？</div></div>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">5</span>下一步改进计划</div><div class="ref-hint">具体可执行的计划</div></div>
+        <div class="ref-item"><div class="ref-q"><span class="ref-num">6</span>需要老师/家长帮助</div><div class="ref-hint">如讲解某类题型、监督等</div></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="footer">数学成绩追踪 · 数据保存在本机浏览器</div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+var R=JSON.parse(localStorage.getItem("mtr")||"[]");
+var TC={"知识盲区":{c:"#7c3aed",t:"tag-p"},"计算失误":{c:"#b45309",t:"tag-y"},"粗心大意":{c:"#b91c1c",t:"tag-r"},"概念混淆":{c:"#1d4ed8",t:"tag-b"},"时间不足":{c:"#047857",t:"tag-g"},"审题不清":{c:"#64748b",t:"tag-gr"}};
+document.getElementById("aDate").value=new Date().toISOString().split("T")[0];
+loadS();render();
+
+function go(p,el){document.querySelectorAll(".nav-btn").forEach(b=>b.classList.remove("active"));document.querySelectorAll(".page").forEach(b=>b.classList.remove("active"));el.classList.add("active");document.getElementById("p-"+p).classList.add("active");if(p==="dash")renderDash();if(p==="list")renderList();if(p==="ana")renderAna()}
+function loadS(){var i=JSON.parse(localStorage.getItem("mts")||"{}");if(i.name)document.getElementById("sName").value=i.name;if(i.cls)document.getElementById("sClass").value=i.cls;if(i.tgt)document.getElementById("sTarget").value=i.tgt}
+function saveS(){localStorage.setItem("mts",JSON.stringify({name:document.getElementById("sName").value,cls:document.getElementById("sClass").value,tgt:document.getElementById("sTarget").value}))}
+document.getElementById("sName").addEventListener("change",saveS);
+document.getElementById("sClass").addEventListener("change",saveS);
+document.getElementById("sTarget").addEventListener("change",saveS);
+
+function save(){var d=document.getElementById("aDate").value,n=document.getElementById("aName").value.trim(),f=parseFloat(document.getElementById("aFull").value)||100,s=parseFloat(document.getElementById("aScore").value),t=document.getElementById("aType").value,r=document.getElementById("aReason").value,p=document.getElementById("aPoint").value.trim(),x=document.getElementById("aRef").value.trim();if(!d||!n||isNaN(s)){toast("请填写日期、名称和得分");return}if(s>f){toast("得分不能大于满分");return}R.push({id:Date.now(),date:d,name:n,full:f,score:s,type:t,reason:r,point:p,ref:x});R.sort((a,b)=>a.date.localeCompare(b.date));localStorage.setItem("mtr",JSON.stringify(R));reset();toast("✅ 保存成功");render();document.querySelector(".nav-btn").click()}
+function reset(){document.getElementById("aDate").value=new Date().toISOString().split("T")[0];document.getElementById("aName").value="";document.getElementById("aFull").value="100";document.getElementById("aScore").value="";document.getElementById("aType").value="";document.getElementById("aReason").value="";document.getElementById("aPoint").value="";document.getElementById("aRef").value=""}
+function del(id){if(!confirm("确定删除？"))return;R=R.filter(r=>r.id!==id);localStorage.setItem("mtr",JSON.stringify(R));render();toast("已删除")}
+function render(){renderDash();renderList();renderAna()}
+
+function renderDash(){var c=R.length;document.getElementById("d1").textContent=c;if(!c){document.getElementById("d2").textContent="--";document.getElementById("d3").textContent="--";document.getElementById("d4").textContent="--";document.getElementById("d4s").textContent="分";document.getElementById("chart1").innerHTML='<div class="chart-empty"><div class="emoji">📊</div><div>暂无数据</div></div>';document.getElementById("recent").innerHTML='<div class="empty"><div class="big">📝</div><h3>还没有记录</h3><p>点击"录入"开始记录</p></div>';return}var sc=R.map(r=>r.score),avg=(sc.reduce((a,b)=>a+b,0)/sc.length).toFixed(1),mx=Math.max(...sc),pr=(sc[sc.length-1]-sc[0]).toFixed(1),prn=parseFloat(pr);document.getElementById("d2").textContent=avg;document.getElementById("d3").textContent=mx;document.getElementById("d4").textContent=(prn>=0?"+":"")+pr;document.getElementById("d4s").textContent=prn>0?"分↑":prn<0?"分↓":"分";drawChart(R);var rc=[...R].reverse().slice(0,5),rh='<table class="data-table" style="min-width:auto"><thead><tr><th>日期</th><th>考试</th><th>得分</th><th>得分率</th><th>类型</th></tr></thead><tbody>';rc.forEach(r=>{var pc=(r.score/r.full*100).toFixed(1),tc=TC[r.type]?.t||"tag-gr",bc=pc>=85?"#10b981":pc>=60?"#f59e0b":"#ef4444";rh+=`<tr><td>${r.date.slice(5)}</td><td>${r.name}</td><td><b>${r.score}</b>/${r.full}</td><td><span class="score-bar"><span class="score-bar-fill" style="width:${pc}%;background:${bc}"></span></span><span style="font-size:11px;color:#888">${pc}%</span></td><td><span class="tag ${tc}">${r.type||"未分类"}</span></td></tr>`});rh+="</tbody></table>";document.getElementById("recent").innerHTML=rh}
+
+function drawChart(data){var box=document.getElementById("chart1");if(data.length<2){box.innerHTML=data.length===1?'<div class="chart-empty"><div class="emoji">📊</div><div>再录一次看趋势</div></div>':'<div class="chart-empty"><div class="emoji">📊</div><div>暂无数据</div></div>';return}var w=900,h=240,pd=36,sc=data.map(r=>r.score),mn=Math.min(...sc,0),mx=Math.max(...sc,100),rg=mx-mn||1,gl="";for(var i=0;i<=5;i++){var y=h-pd-(i/5)*(h-pd*2),v=Math.round(mn+(i/5)*rg);gl+=`<line x1="${pd}" y1="${y}" x2="${w-pd}" y2="${y}" stroke="#e8e8e8" stroke-width="1"/><text x="${pd-6}" y="${y+4}" text-anchor="end" font-size="10" fill="#aaa">${v}</text>`}var ap=data.map((r,i)=>{var x=pd+(i/(data.length-1))*(w-pd*2),y=h-pd-((r.score-mn)/rg)*(h-pd*2);return`${x},${y}`}).join(" "),ap2=`${pd},${h-pd} ${ap} ${w-pd},${h-pd}`,lp=data.map((r,i)=>{var x=pd+(i/(data.length-1))*(w-pd*2),y=h-pd-((r.score-mn)/rg)*(h-pd*2);return`${x},${y}`}).join(" "),pts="",lbs="";data.forEach((r,i)=>{var x=pd+(i/(data.length-1))*(w-pd*2),y=h-pd-((r.score-mn)/rg)*(h-pd*2),pc=(r.score/r.full*100).toFixed(0),co=pc>=85?"#10b981":pc>=60?"#f59e0b":"#ef4444";pts+=`<circle cx="${x}" cy="${y}" r="5" fill="${co}" stroke="#fff" stroke-width="2"/><text x="${x}" y="${y-12}" text-anchor="middle" font-size="11" font-weight="700" fill="${co}">${r.score}</text>`;lbs+=`<text x="${x}" y="${h-10}" text-anchor="middle" font-size="9" fill="#aaa">${r.name}</text>`});box.innerHTML=`<svg class="chart-svg" viewBox="0 0 ${w} ${h}"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#667eea" stop-opacity="0.12"/><stop offset="100%" stop-color="#667eea" stop-opacity="0"/></linearGradient></defs>${gl}<polygon points="${ap2}" fill="url(#ag)"/><polyline points="${lp}" fill="none" stroke="#667eea" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>${pts}${lbs}</svg>`}
+
+function renderList(){var tb=document.getElementById("tb1");if(!R.length){tb.innerHTML='<tr><td colspan="9"><div class="empty"><div class="big">📋</div><h3>暂无记录</h3></div></td></tr>';return}var h="";[...R].reverse().forEach(r=>{var pc=(r.score/r.full*100).toFixed(1),bc=pc>=85?"#10b981":pc>=60?"#f59e0b":"#ef4444",tc=TC[r.type]?.t||"tag-gr";h+=`<tr><td>${r.date}</td><td><b>${r.name}</b></td><td>${r.score}/${r.full}</td><td><span class="score-bar"><span class="score-bar-fill" style="width:${pc}%;background:${bc}"></span></span><span style="font-size:11px;color:#888">${pc}%</span></td><td><span class="tag ${tc}">${r.type||"-"}</span></td><td>${r.reason||"-"}</td><td>${r.point||"-"}</td><td style="max-width:120px;font-size:11px;white-space:pre-wrap">${r.ref||"-"}</td><td><button class="btn-danger" onclick="del(${r.id})">删除</button></td></tr>`});tb.innerHTML=h}
+
+function renderAna(){var td=document.getElementById("types"),sd=document.getElementById("scoreDist"),sg=document.getElementById("suggs");if(!R.length){td.innerHTML='<div class="empty"><div class="big">🎯</div><h3>暂无数据</h3></div>';sd.innerHTML='<div class="empty"><div class="big">📊</div><h3>暂无数据</h3></div>';sg.innerHTML='<div style="padding:12px;color:#888;text-align:center;font-size:13px">录入数据后自动生成建议</div>';return}var ct={};R.forEach(r=>{if(r.type)ct[r.type]=(ct[r.type]||0)+1});var tot=R.length,st=Object.entries(ct).sort((a,b)=>b[1]-a[1]),mc=st[0]?.[1]||1,th="";st.forEach(([t,c])=>{var cfg=TC[t]||{c:"#888"},pc=((c/tot)*100).toFixed(0),bw=(c/mc*100).toFixed(0);th+=`<div class="type-item"><span class="type-name">${t}</span><div class="type-bar"><div class="type-bar-fill" style="width:${bw}%;background:${cfg.c}"></div></div><span class="type-count">${c}</span><span class="type-pct">${pc}%</span></div>`});td.innerHTML=th;var rs={"优秀(90-100)":0,"良好(80-89)":0,"中等(70-79)":0,"及格(60-69)":0,"不及格(<60)":0},rcols=["#10b981","#0ea5e9","#f59e0b","#f97316","#ef4444"];R.forEach(r=>{var p=r.score/r.full*100;if(p>=90)rs["优秀(90-100)"]++;else if(p>=80)rs["良好(80-89)"]++;else if(p>=70)rs["中等(70-79)"]++;else if(p>=60)rs["及格(60-69)"]++;else rs["不及格(<60)"]++});var ent=Object.entries(rs).filter(([_,v])=>v>0),mv=Math.max(...ent.map(([_,v])=>v)),sh='<div style="padding:8px">';ent.forEach(([lb,c],i)=>{var pc=((c/tot)*100).toFixed(0),bw=(c/mv*100).toFixed(0);sh+=`<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px"><span style="font-size:11px;color:#888;min-width:80px;text-align:right">${lb}</span><div style="flex:1;height:16px;background:#e8e8e8;border-radius:8px;overflow:hidden"><div style="width:${bw}%;height:100%;background:${rcols[i]};border-radius:8px"></div></div><span style="font-size:12px;font-weight:700;min-width:55px">${c}次(${pc}%)</span></div>`});sh+="</div>";sd.innerHTML=sh;var sm={"知识盲区":{i:"📚",t:"夯实基础",x:"回归课本梳理概念，制作知识框架图。"},"计算失误":{i:"✏️",t:"强化计算",x:"每天10分钟限时计算，养成验算习惯。"},"粗心大意":{i:"👀",t:"细心审题",x:"圈画关键词，做完留5分钟检查。"},"概念混淆":{i:"🔄",t:"辨析概念",x:"制作概念对比表，通过例题区分。"},"时间不足":{i:"⏱️",t:"限时训练",x:"模拟真实考试时间，合理分配时间。"},"审题不清":{i:"🔍",t:"慢读题意",x:"读题放慢速度，复述题意再动笔。"}},sgh="";st.slice(0,4).forEach(([t])=>{var s=sm[t];if(s)sgh+=`<div class="sugg-item"><div class="sugg-icon">${s.i}</div><div class="sugg-title">${s.t}</div><div class="sugg-text">${s.x}</div></div>`});sg.innerHTML=sgh}
+
+function toast(m){var t=document.getElementById("toast");t.textContent=m;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+</script>
+
+</body>
+</html>
